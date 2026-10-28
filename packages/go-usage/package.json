@@ -1,6 +1,6 @@
 {
   "name": "@kyan-plugins/go-usage",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Ambient OpenCode Go allowance meter in the OpenCode Desktop session header",
   "type": "module",
   "license": "MIT",
@@ -40,6 +40,7 @@
   "devDependencies": {
     "@opencode/client": "2.2.0",
     "@opencode/plugin": "2.2.0",
+    "effect": "4.0.1",
     "solid-js": "^1.9.9",
     "typescript": "^5.9.3",
     "vite": "^7.1.0",

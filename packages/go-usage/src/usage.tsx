@@ -1,15 +1,15 @@
-import type { UsageLimitsInfo } from "@opencode/client"
+import type { LocationRef, UsageLimitsInfo } from "@opencode/client"
 import type { MountedSession } from "@opencode/plugin/gui"
 import { usePlugin } from "@opencode/plugin/gui"
 import { createEffect, createMemo, createSignal, createUniqueId, For, onCleanup, onMount, Show } from "solid-js"
 import { Portal } from "solid-js/web"
+import type { definition } from "./definition"
+import { WINDOWS, type HistorySample, type Window } from "./history"
 
 type Go = NonNullable<UsageLimitsInfo["go"]>
-type GoWindow = keyof Go
-type Meter = Go[GoWindow]
+type Meter = Go[Window]
 type Tone = "neutral" | "warning" | "danger"
 
-const WINDOWS = ["rolling", "weekly", "monthly"] as const
 const LABEL = {
   rolling: "window.rolling",
   weekly: "window.weekly",
@@ -17,12 +17,45 @@ const LABEL = {
 } as const
 
 const REFRESH_MS = 60_000
+const SAMPLE_MS = 5 * 60_000
+const SAMPLE_TTL = 24 * 60 * 60 * 1000
+const SAMPLE_LIMIT = 320
+const RESET_TOLERANCE = 2 * 60_000
 const CARD_WIDTH = 232
 const refreshed = new Map<string, number>()
 const pending = new Map<string, Promise<void>>()
 
+const sameReset = (a: number, b: number) => Math.abs(a - b) <= RESET_TOLERANCE
+
+function prune(
+  samples: readonly HistorySample[],
+  workspace: string,
+  resetAt: Record<Window, number>,
+  now: number,
+) {
+  return samples
+    .flatMap((sample): HistorySample[] => {
+      if (now - sample.at > SAMPLE_TTL) return []
+      if (sample.workspace !== workspace) return [sample]
+      const windows = sample.windows.filter((meter) => sameReset(resetAt[meter.window], meter.resetsAt))
+      if (!windows.length) return []
+      return [{ ...sample, windows }]
+    })
+    .slice(-SAMPLE_LIMIT)
+}
+
+function merge(samples: readonly HistorySample[], next: HistorySample) {
+  const existing = samples.find((sample) => sample.workspace === next.workspace && sample.at === next.at)
+  if (!existing) return [...samples, next]
+  const windows = [
+    ...existing.windows.filter((meter) => !next.windows.some((entry) => entry.window === meter.window)),
+    ...next.windows,
+  ]
+  return samples.map((sample) => (sample === existing ? { ...sample, windows } : sample))
+}
+
 export function GoUsage(props: { session: MountedSession; active: boolean }) {
-  const ctx = usePlugin()
+  const ctx = usePlugin<typeof definition>()
   const cardID = createUniqueId()
   const usage = () => props.session.server.data.location.usage
   const location = () => props.session.location
@@ -31,6 +64,11 @@ export function GoUsage(props: { session: MountedSession; active: boolean }) {
     const ref = location()
     return ref ? usage().limits(ref) : undefined
   })
+
+  const workspaceID = () => {
+    const id = info()?.workspace?.id
+    return id ? id : undefined
+  }
 
   const rows = createMemo(() => {
     const go = info()?.go
@@ -58,19 +96,58 @@ export function GoUsage(props: { session: MountedSession; active: boolean }) {
 
   const percent = (meter: Meter) => Math.max(0, Math.min(100, Math.round(meter.percent)))
 
-  const remaining = (at: number) => {
-    const left = at - Date.now()
-    if (!Number.isFinite(left) || left <= 0) return undefined
-    const minutes = Math.max(1, Math.round(left / 60_000))
+  const duration = (ms: number) => {
+    const minutes = Math.max(1, Math.round(ms / 60_000))
     if (minutes < 60) return ctx.t("reset.minutes", { count: minutes })
     const hours = Math.round(minutes / 60)
     if (hours < 48) return ctx.t("reset.hours", { count: hours })
     return ctx.t("reset.days", { count: Math.round(hours / 24) })
   }
 
+  const remaining = (at: number) => {
+    const left = at - Date.now()
+    if (!Number.isFinite(left) || left <= 0) return undefined
+    return duration(left)
+  }
+
   const resets = (at: number) => {
     const when = remaining(at)
     return when ? ctx.t("reset.in", { when }) : ctx.t("reset.now")
+  }
+
+  const record = (ref: LocationRef) => {
+    const limits = usage().limits(ref)
+    const workspace = limits?.workspace?.id
+    const go = limits?.go
+    if (!workspace || !go) return
+    const store = ctx.stores.history
+    const now = Date.now()
+    const latest = store.value.samples.reduce(
+      (at, sample) => (sample.workspace === workspace && sample.at > at ? sample.at : at),
+      0,
+    )
+    if (now - latest < SAMPLE_MS) return
+    const next = {
+      workspace,
+      at: now,
+      windows: WINDOWS.map((window) => ({
+        window,
+        percent: go[window].percent,
+        resetsAt: go[window].resetsAt,
+      })),
+    }
+    store.set({
+      samples: prune(
+        merge(store.value.samples, next),
+        workspace,
+        {
+          rolling: go.rolling.resetsAt,
+          weekly: go.weekly.resetsAt,
+          monthly: go.monthly.resetsAt,
+        },
+        now,
+      ),
+    })
   }
 
   const refresh = () => {
@@ -83,7 +160,10 @@ export function GoUsage(props: { session: MountedSession; active: boolean }) {
     const request = usage()
       .sync(ref)
       .then(
-        () => void refreshed.set(key, Date.now()),
+        () => {
+          refreshed.set(key, Date.now())
+          record(ref)
+        },
         () => undefined,
       )
       .finally(() => pending.delete(key))
@@ -106,14 +186,16 @@ export function GoUsage(props: { session: MountedSession; active: boolean }) {
       if (!props.active) return
       refresh()
     }
-    const dismiss = () => setVisible(false)
+    const reposition = () => {
+      if (visible()) place()
+    }
     window.addEventListener("focus", focus)
-    window.addEventListener("resize", dismiss)
-    window.addEventListener("scroll", dismiss, true)
+    window.addEventListener("resize", reposition)
+    window.addEventListener("scroll", reposition, true)
     onCleanup(() => {
       window.removeEventListener("focus", focus)
-      window.removeEventListener("resize", dismiss)
-      window.removeEventListener("scroll", dismiss, true)
+      window.removeEventListener("resize", reposition)
+      window.removeEventListener("scroll", reposition, true)
     })
   })
 
@@ -124,6 +206,33 @@ export function GoUsage(props: { session: MountedSession; active: boolean }) {
       ctx.t("card.title"),
       ...list.map((row) => `${ctx.t(LABEL[row.window])} ${percent(row)}% (${resets(row.resetsAt)})`),
     ].join(" · ")
+  })
+
+  const forecast = createMemo(() => {
+    const row = tightest()
+    const workspace = workspaceID()
+    if (!row || !workspace) return undefined
+    const window = ctx.t(LABEL[row.window])
+    if (row.limited || percent(row) >= 100) return ctx.t("forecast.reached", { window })
+    const points = ctx.stores.history.value.samples
+      .filter((sample) => sample.workspace === workspace)
+      .flatMap((sample) => {
+        const meter = sample.windows.find(
+          (entry) => entry.window === row.window && sameReset(entry.resetsAt, row.resetsAt),
+        )
+        return meter ? [{ at: sample.at, percent: meter.percent }] : []
+      })
+      .sort((a, b) => a.at - b.at)
+    if (points.length < 2) return undefined
+    const first = points[0]
+    const last = points[points.length - 1]
+    const elapsed = last.at - first.at
+    if (elapsed <= 0) return undefined
+    const rate = (last.percent - first.percent) / elapsed
+    if (!(rate > 0)) return undefined
+    const eta = (100 - row.percent) / rate
+    if (eta > row.resetsAt - Date.now()) return ctx.t("forecast.resets", { window })
+    return ctx.t("forecast.cap", { window, when: duration(eta) })
   })
 
   const open = () => {
@@ -137,24 +246,38 @@ export function GoUsage(props: { session: MountedSession; active: boolean }) {
   let button: HTMLButtonElement | undefined
   let hiding: number | undefined
 
+  const anchor = (rect: DOMRect) => {
+    const margin = 8
+    const limit = Math.max(margin, window.innerWidth - CARD_WIDTH - margin)
+    const top = rect.bottom + 6
+    if (ctx.locale.direction() === "rtl")
+      return { top, left: Math.min(Math.max(margin, rect.left), limit) }
+    return { top, right: Math.min(Math.max(margin, window.innerWidth - rect.right), limit) }
+  }
+
+  const place = () => {
+    const rect = button?.getBoundingClientRect()
+    if (!rect) return
+    if (rect.bottom < 0 || rect.top > window.innerHeight) {
+      setVisible(false)
+      return
+    }
+    const next = anchor(rect)
+    const current = position()
+    if (next.top === current.top && next.left === current.left && next.right === current.right) return
+    setPosition(next)
+  }
+
   const show = () => {
     if (hiding !== undefined) window.clearTimeout(hiding)
     hiding = undefined
-    const rect = button?.getBoundingClientRect()
-    if (rect) {
-      const margin = 8
-      const limit = Math.max(margin, window.innerWidth - CARD_WIDTH - margin)
-      const top = rect.bottom + 6
-      if (ctx.locale.direction() === "rtl")
-        setPosition({ top, left: Math.min(Math.max(margin, rect.left), limit) })
-      else setPosition({ top, right: Math.min(Math.max(margin, window.innerWidth - rect.right), limit) })
-    }
+    place()
     setVisible(true)
   }
 
   const hide = () => {
     if (hiding !== undefined) window.clearTimeout(hiding)
-    hiding = window.setTimeout(() => setVisible(false), 140)
+    hiding = window.setTimeout(() => setVisible(false), 50)
   }
 
   onCleanup(() => {
@@ -209,6 +332,9 @@ export function GoUsage(props: { session: MountedSession; active: boolean }) {
                     </div>
                   )}
                 </For>
+                <Show when={forecast()}>
+                  {(line) => <div data-slot="go-usage-forecast">{line()}</div>}
+                </Show>
               </div>
             </Portal>
           </Show>

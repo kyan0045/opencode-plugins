@@ -54,6 +54,7 @@
   position: fixed;
   z-index: 1000;
   min-width: 232px;
+  max-width: 232px;
   padding: 8px;
   border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
   border-radius: 8px;
@@ -93,4 +94,15 @@
 [data-slot="go-usage-reset"] {
   color: var(--v2-text-text-faint);
   font-variant-numeric: tabular-nums;
+}
+
+[data-slot="go-usage-forecast"] {
+  margin-top: 4px;
+  padding: 5px 6px 2px;
+  border-top: 1px solid color-mix(in srgb, currentColor 8%, transparent);
+  color: var(--v2-text-text-faint);
+  font-size: 11px;
+  line-height: 16px;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
 }

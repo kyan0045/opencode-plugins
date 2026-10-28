@@ -1,0 +1,9 @@
+{
+  "name": "opencode-plugins",
+  "private": true,
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "build": "bun run --filter '*' build",
+    "typecheck": "bun run --filter '*' typecheck"
+  }
+}

@@ -1,0 +1,96 @@
+[data-component="go-usage"] {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+[data-component="go-usage"] [data-slot="go-usage-pill"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--v2-text-text-faint);
+  font: inherit;
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 530;
+  letter-spacing: -0.04px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+[data-component="go-usage"] [data-slot="go-usage-pill"]:hover {
+  background: color-mix(in srgb, currentColor 10%, transparent);
+  color: var(--v2-text-text-muted);
+}
+
+[data-component="go-usage"] [data-slot="go-usage-pill"]:focus-visible {
+  outline: 2px solid var(--v2-border-border-focus);
+  outline-offset: 2.5px;
+}
+
+[data-component="go-usage"] [data-slot="go-usage-dot"] {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.75;
+}
+
+[data-component="go-usage"][data-tone="warning"] [data-slot="go-usage-pill"] {
+  color: var(--v2-state-fg-warning, #d97706);
+}
+
+[data-component="go-usage"][data-tone="danger"] [data-slot="go-usage-pill"] {
+  color: var(--v2-state-fg-danger, #e5484d);
+}
+
+[data-slot="go-usage-card"] {
+  position: fixed;
+  z-index: 1000;
+  min-width: 232px;
+  padding: 8px;
+  border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  border-radius: 8px;
+  background: var(--v2-background-bg-layer-02, #1b1b1b);
+  box-shadow: 0 10px 26px rgb(0 0 0 / 28%);
+  color: var(--v2-text-text-base);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+[data-slot="go-usage-title"] {
+  padding: 2px 6px 6px;
+  color: var(--v2-text-text-muted);
+  font-size: 11px;
+  font-weight: 530;
+}
+
+[data-slot="go-usage-row"] {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 6px;
+  border-radius: 4px;
+}
+
+[data-slot="go-usage-window"] {
+  color: var(--v2-text-text-base);
+}
+
+[data-slot="go-usage-percent"] {
+  color: var(--v2-text-text-base);
+  font-variant-numeric: tabular-nums;
+  font-weight: 530;
+}
+
+[data-slot="go-usage-reset"] {
+  color: var(--v2-text-text-faint);
+  font-variant-numeric: tabular-nums;
+}

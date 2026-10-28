@@ -8,7 +8,6 @@ GUI plugins for [OpenCode Desktop](https://opencode.ai).
 - [`@kyan-plugins/run-meter`](packages/run-meter): live turn throughput, time to first token, and cost in the session
   header, with a run history panel.
 - [`@kyan-plugins/memory-monitor`](packages/memory-monitor): app and OpenCode server memory in the titlebar, Linux only.
-- [`@kyan-plugins/run-meter`](packages/run-meter): live turn throughput, time to first token, and cost in the session header.
 
 Each package publishes to npm and installs with:
 

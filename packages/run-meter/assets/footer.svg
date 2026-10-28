@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="630" height="116" viewBox="0 0 630 116">
-  <rect width="630" height="116" rx="10" fill="#141414"/>
-  <g transform="translate(32 50)" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1.2">
-    <rect x="2" y="2" width="12" height="12" rx="2"/>
-    <rect x="6" y="6" width="12" height="12" rx="2" fill="#141414"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="120" viewBox="0 0 760 120">
+  <rect width="760" height="120" rx="12" fill="#141414"/>
+  <g transform="translate(30 51)" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1.5">
+    <rect x="2" y="2" width="14" height="14" rx="3"/>
+    <rect x="7" y="7" width="14" height="14" rx="3" fill="#141414"/>
   </g>
-  <text x="62" y="62" font-family="Inter, system-ui, sans-serif" font-size="12" font-weight="440" letter-spacing="0.05" fill="rgba(255,255,255,0.45)">Build · DeepSeek V4.1 Flash · 13s · 43.2 tok/s · 1.2s TTFT · $0.04</text>
+  <text x="64" y="69" font-family="Inter, system-ui, sans-serif" font-size="16" font-weight="440" letter-spacing="0.05" fill="rgba(255,255,255,0.45)">Build · DeepSeek V4.1 Flash · 13s · 43.2 tok/s · 1.2s TTFT · $0.04</text>
 </svg>

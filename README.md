@@ -30,4 +30,4 @@ Each package also has `bun run dev` for a watch build. To load a local checkout,
 
 ## License
 
-MIT
+[MIT](LICENSE)

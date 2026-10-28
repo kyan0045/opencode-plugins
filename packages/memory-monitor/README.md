@@ -72,4 +72,4 @@ The app reloads the bundle in every window after each rebuild.
 
 ## License
 
-MIT
+[MIT](LICENSE)

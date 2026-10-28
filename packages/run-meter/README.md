@@ -7,7 +7,7 @@ other session-header indicators and keeps the settled rate in the assistant foot
 
 ## What it shows
 
-- The header indicator shows `~43.2 tok/s · 1.2s · $0.04` while a turn runs, then clears two seconds after the step
+- The header indicator shows `~54.3 tok/s · 2.3s · $0.00` while a turn runs, then clears two seconds after the step
   settles.
 - Hover it for output tokens, active time, time to first token, turn cost, and whether the rate is still estimated.
 - The settled rate is appended to the assistant footer's hover row, next to the agent, model, and duration.

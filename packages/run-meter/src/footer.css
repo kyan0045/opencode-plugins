@@ -1,0 +1,20 @@
+[data-opencode-run-meter] {
+  display: inline-block;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: inherit;
+  color: inherit;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: inherit;
+  user-select: none;
+}
+
+[data-opencode-run-meter]::before {
+  content: "·";
+  margin-inline-end: 4px;
+  opacity: 0.66;
+}

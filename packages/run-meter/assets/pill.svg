@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="630" height="116" viewBox="0 0 630 116">
+  <rect width="630" height="116" rx="10" fill="#141414"/>
+  <g transform="translate(32 44)">
+    <rect width="300" height="28" rx="12" fill="#1b1b1b" stroke="rgba(255,255,255,0.12)" stroke-width="0.5"/>
+    <g transform="translate(12 7)" stroke="rgba(255,255,255,0.45)" stroke-width="1.5" stroke-linecap="round">
+      <path d="M2 7V9M4.5 5V11M7 2.5V13.5M9.5 4.5V11.5M12 6V10M14.5 7.25V8.75"/>
+    </g>
+    <text x="34" y="18" font-family="Inter, system-ui, sans-serif" font-size="13" font-weight="440" letter-spacing="-0.04" fill="rgba(255,255,255,0.88)">~43.2 tok/s · 1.2s · $0.04</text>
+  </g>
+</svg>

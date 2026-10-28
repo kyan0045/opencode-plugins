@@ -17,6 +17,19 @@
         "vite-plugin-solid": "^2.11.8",
       },
     },
+    "packages/run-meter": {
+      "name": "@kyan-plugins/run-meter",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@opencode/client": "2.2.0",
+        "@opencode/plugin": "2.2.0",
+        "effect": "4.0.1",
+        "solid-js": "^1.9.9",
+        "typescript": "^5.9.3",
+        "vite": "^7.1.0",
+        "vite-plugin-solid": "^2.11.8",
+      },
+    },
   },
   "packages": {
     "@ai-sdk/provider": ["@ai-sdk/provider@3.0.8", "", { "dependencies": { "json-schema": "^0.4.0" } }, "sha512-oGMAgGoQdBXbZqNG0Ze56CHjDZ1IDYOwGYxYjO5KLSlz5HiNQ9udIXsPZ61VWaHGZ5XW/jyjmr6t2xz2jGVwbQ=="],
@@ -182,6 +195,8 @@
     "@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
 
     "@kyan-plugins/go-usage": ["@kyan-plugins/go-usage@workspace:packages/go-usage"],
+
+    "@kyan-plugins/run-meter": ["@kyan-plugins/run-meter@workspace:packages/run-meter"],
 
     "@napi-rs/lzma-linux-x64-gnu": ["@napi-rs/lzma-linux-x64-gnu@1.5.1", "", { "os": "linux", "cpu": "x64" }, "sha512-oTXEIha4SsuXdTA4Iyskj0kpdx2yVXdhd75c2v3xGrHFfVMsbhTPZU/nMPL4sWKo4pBHm3aucLaqGlF696dTyQ=="],
 

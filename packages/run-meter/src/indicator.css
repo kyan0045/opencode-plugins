@@ -1,0 +1,55 @@
+[data-component="run-meter"] {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+[data-slot="run-meter-indicator"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--v2-text-text-faint);
+  font: inherit;
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 530;
+  letter-spacing: -0.04px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  cursor: default;
+}
+
+[data-slot="run-meter-indicator"]:hover {
+  background: color-mix(in srgb, currentColor 10%, transparent);
+  color: var(--v2-text-text-muted);
+}
+
+[data-slot="run-meter-tooltip"] {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 190px;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+[data-slot="run-meter-tooltip-row"] {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+[data-slot="run-meter-tooltip-label"] {
+  color: var(--v2-text-text-muted);
+}
+
+[data-slot="run-meter-tooltip-value"] {
+  margin-left: auto;
+  color: var(--v2-text-text-base);
+  font-variant-numeric: tabular-nums;
+}

@@ -1,0 +1,50 @@
+{
+  "name": "@kyan-plugins/run-meter",
+  "version": "0.1.0",
+  "description": "Live turn throughput, time to first token, and cost in the OpenCode Desktop session header",
+  "type": "module",
+  "license": "MIT",
+  "author": "Kyan Bosman <git@kyanbosman.com>",
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "opencode-gui-plugin",
+    "tokens",
+    "throughput",
+    "latency"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kyan0045/opencode-plugins.git",
+    "directory": "packages/run-meter"
+  },
+  "homepage": "https://github.com/kyan0045/opencode-plugins/tree/main/packages/run-meter#readme",
+  "bugs": {
+    "url": "https://github.com/kyan0045/opencode-plugins/issues"
+  },
+  "exports": {
+    "./gui-experimental": "./dist/gui-experimental.cjs"
+  },
+  "files": [
+    "dist",
+    "assets"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite build --watch",
+    "typecheck": "tsc --noEmit",
+    "prepack": "bun run build"
+  },
+  "devDependencies": {
+    "@opencode/client": "2.2.0",
+    "@opencode/plugin": "2.2.0",
+    "effect": "4.0.1",
+    "solid-js": "^1.9.9",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.0",
+    "vite-plugin-solid": "^2.11.8"
+  }
+}

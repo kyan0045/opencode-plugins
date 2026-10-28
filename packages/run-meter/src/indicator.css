@@ -21,12 +21,30 @@
   letter-spacing: -0.04px;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-  cursor: default;
+  appearance: none;
+  cursor: pointer;
 }
 
 [data-slot="run-meter-indicator"]:hover {
   background: color-mix(in srgb, currentColor 10%, transparent);
   color: var(--v2-text-text-muted);
+}
+
+[data-slot="run-meter-indicator"]:focus-visible {
+  outline: 2px solid var(--v2-border-border-focus);
+  outline-offset: 2.5px;
+}
+
+[data-slot="run-meter-card"] {
+  position: fixed;
+  z-index: 80;
+  min-width: 208px;
+  padding: 8px;
+  border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  border-radius: 8px;
+  background: var(--v2-background-bg-layer-02, #1b1b1b);
+  box-shadow: 0 10px 26px rgb(0 0 0 / 28%);
+  color: var(--v2-text-text-base);
 }
 
 [data-slot="run-meter-tooltip"] {

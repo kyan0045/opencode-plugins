@@ -1,13 +1,27 @@
-import { createSignal, onCleanup } from "solid-js"
-import { ComposerPill, createKeyed, Plugin, SettingsPage, Slot, Style } from "@opencode/plugin/gui"
+import { createSignal, lazy, onCleanup, Suspense } from "solid-js"
+import {
+  ComposerPill,
+  createKeyed,
+  MenuItem,
+  Panel,
+  Plugin,
+  SettingsPage,
+  Slot,
+  Style,
+  type PanelTab,
+} from "@opencode/plugin/gui"
 import { turnMeter } from "./meter"
 import { compactLabel, fullLabel, meterDetails } from "./label"
 import { mountFooterMeter } from "./footer"
+import { createTurnRecorder, mergeSamples } from "./history"
 import { RunMeter } from "./indicator"
 import { RunMeterSettings } from "./settings"
 import { definition } from "./definition"
 import footerCss from "./footer.css?inline"
+import historyCss from "./history.css?inline"
 import indicatorCss from "./indicator.css?inline"
+
+const RunHistoryPanel = lazy(() => import("./history-panel"))
 
 const setup: Plugin.Setup<typeof definition> = (ctx) => {
   const [now, setNow] = createSignal(Date.now())
@@ -19,13 +33,32 @@ const setup: Plugin.Setup<typeof definition> = (ctx) => {
     if (!steps.has(messageID)) steps.set(messageID, at)
     firstOutput.set(sessionID, steps)
   }
+  const turns = createTurnRecorder((samples) => {
+    const store = ctx.stores.history
+    store.set({ samples: mergeSamples(store.value.samples, samples) })
+  })
 
   createKeyed(
     () => ctx.servers.list().map((id) => ctx.servers.get(id)?.data),
     (servers) => {
       for (const data of servers) {
         if (!data) continue
-        onCleanup(data.on("session.execution.started", (event) => firstOutput.delete(event.data.sessionID)))
+        onCleanup(
+          data.on("session.execution.started", (event) => {
+            firstOutput.delete(event.data.sessionID)
+            turns.start(event)
+          }),
+        )
+        onCleanup(data.on("session.execution.succeeded", (event) => turns.succeed(event)))
+        onCleanup(data.on("session.execution.failed", (event) => turns.cancel(event)))
+        onCleanup(data.on("session.execution.interrupted", (event) => turns.cancel(event)))
+        onCleanup(data.on("session.step.started", (event) => turns.stepStarted(event)))
+        onCleanup(data.on("session.step.streamed", (event) => turns.stepStreamed(event)))
+        onCleanup(
+          data.on("session.step.ended", (event) =>
+            turns.stepEnded(event, (messageID) => firstOutput.get(event.data.sessionID)?.get(messageID)),
+          ),
+        )
         onCleanup(
           data.on("session.text.started", (event) =>
             record(event.data.sessionID, event.data.assistantMessageID, event.created),
@@ -51,6 +84,7 @@ const setup: Plugin.Setup<typeof definition> = (ctx) => {
 
   ctx.add(Style, footerCss)
   ctx.add(Style, indicatorCss)
+  ctx.add(Style, historyCss)
   ctx.add(Slot, (): Slot | undefined => {
     if (!ctx.stores.placement.value.header) return undefined
 
@@ -124,6 +158,48 @@ const setup: Plugin.Setup<typeof definition> = (ctx) => {
       },
     }),
   )
+
+  const historyTab: PanelTab = {
+    id: "history",
+    get title() {
+      return ctx.t("history.title")
+    },
+    closable: "hover",
+  }
+
+  ctx.add(Panel, {
+    id: "history",
+    region: "side",
+    mobile: {
+      get title() {
+        return ctx.t("history.title")
+      },
+      order: 40,
+      kind: "menu",
+      icon: "window-analytics",
+    },
+    list: (input) => (input.open.includes(historyTab.id) ? [historyTab] : []),
+    render: () => (
+      <Suspense fallback={<div data-slot="run-history-loading">{ctx.t("history.loading")}</div>}>
+        <RunHistoryPanel />
+      </Suspense>
+    ),
+  })
+  ctx.add(MenuItem, (): MenuItem | undefined => {
+    const session = ctx.sessions.current()
+
+    return {
+      menu: "session.panel",
+      id: "history",
+      title: ctx.t("history.title"),
+      icon: "window-analytics",
+      order: 20,
+      opened: !!session && ctx.layout.state(`${ctx.id}:${historyTab.id}`, session) !== "closed",
+      run: () => {
+        if (session) ctx.layout.open(`${ctx.id}:${historyTab.id}`, session)
+      },
+    }
+  })
 
   ctx.add(SettingsPage, {
     id: "run-meter",

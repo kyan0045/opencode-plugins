@@ -1,6 +1,6 @@
 {
   "name": "@kyan-plugins/run-meter",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Live turn throughput, time to first token, and cost in the OpenCode Desktop session header",
   "type": "module",
   "license": "MIT",

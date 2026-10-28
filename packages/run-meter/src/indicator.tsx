@@ -1,7 +1,10 @@
-import { createSignal, For, Show } from "solid-js"
+import { createEffect, createSignal, createUniqueId, For, onCleanup, Show } from "solid-js"
+import { Portal } from "solid-js/web"
 import { usePlugin, type MountedSession } from "@opencode/plugin/gui"
 import { turnMeter, type MeterInput, type TurnMeter } from "./meter"
 import { compactLabel, meterDetails } from "./label"
+
+const fallbackCardWidth = 208
 
 export function RunMeter(props: {
   session: MountedSession
@@ -34,19 +37,110 @@ export function RunMeter(props: {
 
   return (
     <Show when={shown()}>
-      {(value) => (
-        <div data-component="run-meter">
-          <ctx.ui.Tooltip value={<TooltipBody meter={live() ?? value()} showCost={props.showCost} />} placement="bottom">
-            <span
+      {(value) => {
+        const cardId = createUniqueId()
+        const [visible, setVisible] = createSignal(false)
+        const [position, setPosition] = createSignal({ top: 0, left: 0 })
+        let trigger: HTMLButtonElement | undefined
+        let card: HTMLElement | undefined
+        let hiding: ReturnType<typeof setTimeout> | undefined
+
+        const cancelHide = () => {
+          if (hiding !== undefined) clearTimeout(hiding)
+          hiding = undefined
+        }
+        const close = () => {
+          cancelHide()
+          setVisible(false)
+          setFrozen(undefined)
+        }
+        const hide = () => {
+          cancelHide()
+          hiding = setTimeout(close, 50)
+        }
+        const place = () => {
+          if (!visible()) return
+
+          const rect = trigger?.getBoundingClientRect()
+          if (!rect) return
+          if (rect.bottom < 0 || rect.top > window.innerHeight || rect.right < 0 || rect.left > window.innerWidth) {
+            close()
+            return
+          }
+
+          const width = card?.offsetWidth || fallbackCardWidth
+          setPosition({
+            top: rect.bottom + 6,
+            left: Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)),
+          })
+        }
+        const show = () => {
+          cancelHide()
+          setFrozen(live())
+          setVisible(true)
+          place()
+          requestAnimationFrame(place)
+        }
+        const openHistory = () => {
+          close()
+          ctx.layout.open(`${ctx.id}:history`, props.session)
+        }
+
+        createEffect(() => {
+          if (!visible()) return
+
+          const reposition = () => place()
+          const dismiss = (event: KeyboardEvent) => {
+            if (event.key === "Escape") close()
+          }
+
+          window.addEventListener("scroll", reposition, true)
+          window.addEventListener("resize", reposition)
+          window.addEventListener("keydown", dismiss)
+          onCleanup(() => {
+            window.removeEventListener("scroll", reposition, true)
+            window.removeEventListener("resize", reposition)
+            window.removeEventListener("keydown", dismiss)
+          })
+        })
+        onCleanup(close)
+
+        return (
+          <div data-component="run-meter">
+            <button
+              ref={trigger}
+              type="button"
               data-slot="run-meter-indicator"
-              onPointerEnter={() => setFrozen(live())}
-              onPointerLeave={() => setFrozen(undefined)}
+              aria-label={`${compactLabel(ctx, value(), props.showCost())} (${ctx.t("history.open")})`}
+              aria-describedby={visible() ? cardId : undefined}
+              onPointerEnter={show}
+              onPointerLeave={hide}
+              onFocus={show}
+              onBlur={hide}
+              onClick={openHistory}
             >
               <span>{compactLabel(ctx, value(), props.showCost())}</span>
-            </span>
-          </ctx.ui.Tooltip>
-        </div>
-      )}
+            </button>
+            <Portal>
+              <Show when={visible()}>
+                <div
+                  ref={(element) => {
+                    card = element
+                  }}
+                  id={cardId}
+                  data-slot="run-meter-card"
+                  role="tooltip"
+                  style={{ top: `${position().top}px`, left: `${position().left}px` }}
+                  onPointerEnter={cancelHide}
+                  onPointerLeave={hide}
+                >
+                  <TooltipBody meter={value()} showCost={props.showCost} />
+                </div>
+              </Show>
+            </Portal>
+          </div>
+        )
+      }}
     </Show>
   )
 }
